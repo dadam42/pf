@@ -1,5 +1,6 @@
 #include "ft_printf.h"
 #include "t_out_buffer.h"
+#include "pf_parser.h"
 #include <stdarg.h>
 
 int ft_vadprintf(int fd, char const* str, va_list pfargs)
@@ -17,7 +18,8 @@ int ft_vadprintf(int fd, char const* str, va_list pfargs)
 		if (!*str)
 			return (t_out_buffer_flush(&buf));
 		t_out_bufferize(&buf, strmem, str);
-		if (ft_pf_parse(&str, &buf, &pfargs) == FT_PF_PARSE_ERROR)
+		str++;
+		if (ft_pf_parse_exec(&str, &buf, &pfargs) == PF_PARSE_ERROR)
 			return (FT_PRINTF_ERROR);
 	}
 }

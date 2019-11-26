@@ -5,7 +5,7 @@
 
 typedef struct s_txt_field_datas
 {
-	int		content_sz;
+	int		content_size;
 	char	*content;
 	char	left_bg;
 	char	right_bg;
@@ -15,8 +15,9 @@ typedef struct s_txt_field_datas
 
 typedef struct s_txt_field
 {
-	char	*field;
-	int		size;
+	char				*my_field;
+	int					size;
+	t_txt_field_datas	*datas;
 }				t_txt_field;
 
 int		t_txt_field_init(t_txt_field *field, t_txt_field_datas *datas);
