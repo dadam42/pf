@@ -15,18 +15,17 @@
 # define FMT_EXEC_ERROR	2
 # include <stdarg.h>
 # include "t_out_buffer.h"
+# include "general_bank.h"
 
-typedef int				t_convdx;
 typedef unsigned char	t_flags;
 typedef struct			s_pf_format
 {
 	t_flags				flags;
 	int					width;
 	int					prec;
-	t_convdx			convdx;
+	char				conv_char;
 }						t_pf_format;
 
-int						pf_format_exec(t_pf_format *fmt, t_out_buffer *buf
-									, va_list *pfargs);
-void					pf_format_normalize(t_pf_format *fmt);
+void					pf_format_normalize(t_pf_format *fmt)
+						= general_normalization;
 #endif

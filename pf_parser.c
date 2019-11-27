@@ -1,11 +1,11 @@
 #include "pf_parser.h"
 #include "t_out_buffer.h"
 #include "t_pf_format.h"
-#include "pf_conv_provider.h"
+#include "conv.h"
 #include "libft.h"
 
 static int parse_width(char const **str, t_pf_format *fmt, va_list *pfargs)
-{	
+{
 	if (!**str)
 		return (PF_PARSE_ERROR);
 	if (ft_isdigit(**str) || **str == '*')
@@ -63,9 +63,8 @@ static int parse_flags(char const **str, t_pf_format *fmt)
 
 static int parse_conv(char const **str, t_pf_format *fmt)
 {
-	if (!**str)
+	if (!(fmt->conv_char == **str))
 		return (PF_PARSE_ERROR);
-	fmt->convdx = pf_get_convdx(**str);
 	return (PF_PARSE_OK);
 }
 
@@ -73,6 +72,7 @@ int pf_parse_exec(char const **str, t_out_buffer *buf, va_list *pfargs)
 {
 	pf_format fmt;
 	char *ostr;
+	t_conv	conv;
 
 	ft_bzero(&fmt, sizeof(t_pf_format));
 	ostr = *str;
@@ -84,8 +84,10 @@ int pf_parse_exec(char const **str, t_out_buffer *buf, va_list *pfargs)
 			|| parse_prec(str, &fmt, pfargs) == PF_PARSE_ERROR
 			|| parse_conv(str, &fmt) == PF_PARSE_ERROR)
 			break;
-		return (pf_format_exec(&fmt, buf, pfargs) == PF_EXEC_OK 
-				? PF_PARSE_OK : PF_PARSE_ERROR);
+		if (conv_init(&conv, &fmt, pfargs) == CONV_INIT_ERROR
+			|| conv.exec(&conv, &fmt, out, pfargs) == CONV_EXEC_ERROR)
+			return (PF_PARSE_ERROR);
+		return (PF_PARSE_OK);
 	}
 	t_out_buffer_ize(buf, ostr, *str);
 	return (PF_PARSE_OK);
