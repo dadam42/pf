@@ -1,6 +1,6 @@
 #### - Start of actual module's parameters
 # Optional, set if modules must produce executable
-#NAME = wow#
+NAME = ft_printf#
 
 # Name of the directory containing sources for the module, no trailing slash.
 SRCS_DIR = .#
@@ -8,17 +8,19 @@ SRCS_DIR = .#
 # If NAME is set, the file containing .c must be the first in the list
 # Files borrowed to sub-modules _must_ be mentionned with their module's directory
 # e.g. sub_module_dir/file.c
-RAW_SRCS = t_out_buffer.c#
+RAW_SRCS = $(wildcard *.c) t_txt_field/t_txt_field.c t_out_buffer/t_out_buffer.c#
 # Optionnal list of directories for #include preprocessor directive
 INCLUDES = #
 
 # Optionnal list of sub-modules directories
-MOD_DIRS = #
+MOD_DIRS = t_txt_field  t_out_buffer#
 
 LDIRS = #
 LIBS = #
 #### - End of actual module's parameters
 
+INCLUDES = $(INCLUDES) $(MOD_DIRS)
+IFLAGS = $(INCLUDES:%=-I%)
 LKFLAGS = $(LIBS:lib%=-l%)#
 LDFLAGS = $(LDIRS:%=-L%)#
 
@@ -35,6 +37,7 @@ MOD_FILES := $(filter $(mod_pattern), $(RAW_SRCS))
 SRCS_FILES := $(filter-out $(mod_pattern), $(RAW_SRCS))
 OBJ_FILES = $(SRCS_FILES:%.c=%.o) $(MOD_FILES:%.c=%.o)
 
+
 # Trick from http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#combine 
 # to handle dependancies, the trick is used every where a (*) symbol appear.
 DEP_DIR = .cdependancies#
@@ -42,7 +45,7 @@ DEP_FLAGS = -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d
 
 CC = gcc#
 CFLAGS = -Wall -Werror -Wextra#
-COMPFLAGS = $(CFLAGS) $(INCLUDES) $(LFLAGS) $(LKFLAGS)#
+COMPFLAGS = $(CFLAGS) $(IFLAGS) $(LFLAGS) $(LKFLAGS)#
 
 .PHONY: all
 ifndef NAME
