@@ -17,7 +17,7 @@ $(NAME) : ${SRCS:%=srcs/%.o}
 	ranlib ${NAME}
 
 %.o : %.c
-	${COMP} ${CFLAGS} -I${INCLUDEDIR}  -c $< -o $@
+	${COMP} $(DFLAG) ${CFLAGS} -I${INCLUDEDIR}  -c $< -o $@
 
 clean :
 	rm -f ${SRCS:%=srcs/%.o}

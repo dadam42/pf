@@ -25,7 +25,7 @@ static int parse_width(char const **str, t_pf_format *fmt, va_list *pfargs)
 static int parse_prec(char const **str, t_pf_format *fmt, va_list *pfargs)
 {
 	if (!**str)
-		return (PR_PARSE_ERROR);
+		return (PF_PARSE_ERROR);
 	if (**str == '.')
 	{
 		(*str)++;
@@ -53,7 +53,7 @@ static int parse_flags(char const **str, t_pf_format *fmt)
 		if (**str == '-')
 			fmt->flags |= FMT_MINUS;
 		else
-			fmt->flags |= FMT->ZERO;
+			fmt->flags |= FMT_ZERO;
 		(*str)++;
 	}
 	while (**str == '-' || **str == '+')
@@ -70,8 +70,8 @@ static int parse_conv(char const **str, t_pf_format *fmt)
 
 int pf_parse_exec(char const **str, t_out_buffer *buf, va_list *pfargs)
 {
-	pf_format fmt;
-	char *ostr;
+	t_pf_format fmt;
+	char const *ostr;
 	t_conv	conv;
 
 	ft_bzero(&fmt, sizeof(t_pf_format));
@@ -85,7 +85,7 @@ int pf_parse_exec(char const **str, t_out_buffer *buf, va_list *pfargs)
 			|| parse_conv(str, &fmt) == PF_PARSE_ERROR)
 			break;
 		if (conv_init(&conv, &fmt, pfargs) == CONV_INIT_ERROR
-			|| conv.exec(&conv, &fmt, out, pfargs) == CONV_EXEC_ERROR)
+			|| conv.exec(&conv, buf) == CONV_EXEC_ERROR)
 			return (PF_PARSE_ERROR);
 		return (PF_PARSE_OK);
 	}

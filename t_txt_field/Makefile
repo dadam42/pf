@@ -1,100 +1,84 @@
-#### - Start of actual module's parameters
-# Optional, set if modules must produce executable
-#NAME = wow#
+NAME:=#
+MODS:=# Modules' directories, _each_ of these modules _must_ containt a Makefile
+DIRSRCS:=# Directory containing sources
+SRCS:=# Sources list, needed modules' .c files needed must be here, if, on a module
+      # basis, no .c file is mentionned then all .c files module's will be automaticly added.
+LIBS:=#each lib here can have its own directory in the variable $(lib)DIR
+		#if unset, this variable wille have the default value $(lib)
+LDLIBS:=#	Linker's extra flags (e.g. -L)
+DIRINCS:=#
+CFLAGS:=-Wall -Wextra -Werror
+CPPFLAGS= -MT $@ -MMD -MP -MF $(DIRDEPS)/$*.d#	Preprocessor's flags
+DIRDEPS:=.dep#Directory where dependencies' makefiles will be hidden.
 
-# Name of the directory containing sources for the module, no trailing slash.
-SRCS_DIR = .#
-
-# If NAME is set, the file containing .c must be the first in the list
-# Files borrowed to sub-modules _must_ be mentionned with their module's directory
-# e.g. sub_module_dir/file.c
-RAW_SRCS = t_txt_field.c#
-# Optionnal list of directories for #include preprocessor directive
-INCLUDES = #
-
-# Optionnal list of sub-modules directories
-MOD_DIRS = #
-
-LDIRS = #
-LIBS = #
-#### - End of actual module's parameters
-
-LKFLAGS = $(LIBS:lib%=-l%)#
-LDFLAGS = $(LDIRS:%=-L%)#
-
-# Pre definition of modules' rules.
-define MOD_RULE
-$(1)/%.o:
-	$(MAKE) -C $(1) $$*.o
+define set
+$(1):=$2
 endef
 
-# Not sure if it is useful...
-# Filter real module's files from sub-modules' files.
-mod_pattern := $(MOD_DIRS:%:%/%)
-MOD_FILES := $(filter $(mod_pattern), $(RAW_SRCS))
-SRCS_FILES := $(filter-out $(mod_pattern), $(RAW_SRCS))
-OBJ_FILES = $(SRCS_FILES:%.c=%.o) $(MOD_FILES:%.c=%.o)
+LFLAGS:=$(LIBS:lib%=-l%)
+$(foreach lib, $(LIBS), $(if $(lib)DIR,,$(call set, $(lib)DIR, $(lib))))
+PATTERNMODS:=$(MODS:%=%/%)
 
-# Trick from http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#combine 
-# to handle dependancies, the trick is used every where a (*) symbol appear.
-DEP_DIR = .cdependancies#
-DEP_FLAGS = -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d
+MYSRCS:=$(filter-out $(PATTERNMODS),$(SRCS))
+MODSSRCS:=$(filter $(PATTERNMODS),$(SRCS))
 
-CC = gcc#
-CFLAGS = -Wall -Werror -Wextra#
-COMPFLAGS = $(CFLAGS) $(INCLUDES) $(LFLAGS) $(LKFLAGS)#
-
-.PHONY: all
-ifndef NAME
-all : $(OBJ_FILES)
-
-else
-all : $(NAME)
-
-$(NAME): $(OBJ_FILES)
-	echo "UNMODE NAME RULE"
-	$(CC) $^ -o $@
+#if DIRSRCS is empty lets give it a value anyway:
+ifeq ($(DIRSRCS), )
+DIRSRCS:=.
 endif
 
-#(*)
-%.o : %.c
+$(foreach lib, $(LIBS), $(if $($(lib)INC), ,$(call set, $($(lib)INC), $lib)))
 
-#(*)
-%.o : $(SRCS_DIR)/%.c $(DEP_DIR)/%.d | $(DEP_DIR)
-	$(CC) $(DEP_FLAGS) $(COMPFLAGS) -c $<
+IFLAGS:= $(DIRSRCS:%=-I%) $(DIRINCS:%=-I%) $(MODS:%=-I%) $(foreach lib, $(LIBS), $($(lib)INC:%=-I%))
 
-# Real definition of modules' rules.
-$(foreach mod, $(MOD_DIRS), $(eval $(call MOD_RULE, $(mod))))
+# if MYSRCS is empty, it will be populated with all the .c files found in $DIRSRCS
+ifeq ($(MYSRCS),)
+MYSRCS:=$(wildcard $(DIRSRCS)/*.c)
+else
+MYSRCS:=$(MYSRCS:%.c=$(DIRSRCS)/%.c)
+endif
 
-#(*)
-$(DEP_DIR): ; mkdir -p $@
+# If, on a per module basis, MODSSRCS contains no .c file from the module, _all_ the
+# module's .c files are then added to the sources list.
+MODSSRCS:=$(MODSSRCS) $(foreach mod,$(MODS),$(if $(filter $(mod)/%.c, $(MODSSRCS)),,$(wildcard $(mod)/*.c)))
+MYOBJS:=$(MYSRCS:%.c=%.o)
+MODSOBJS:=$(MYSRCS:%.c=%.o)
 
-.PHONY: $(LIBS)
-lib% :
-	$(MAKE) -C $@
+define MOD_RULE
+$(1):
+	$(MAKE) -C $(1) $(patsubst $(1)/%.o,%.o,$(filter $(1)/%,$(MODSSRCS:%.c=%.o)))
+endef
+
+define LIB_RULE
+$(1):
+	$(CMAKE) -C $($(1)DIR)
+endef
+
+.PHONY:all
+all: $(MYOBJS) $(MODS)
+
+$(NAME): $(MYOBJS) $(MODS)
+	$(CC) $(CFLAGS) $(LDLIBS) $(LFLAGS) $(OBJS) -c $@
+
+$(DIRSRCS)/%.o: $(DIRSRCS)/%.c $(DIRDEPS)/%.d | $(DIRDEPS)
+	$(CC) $(DFLAG) $(CPPFLAGS) $(CFLAGS) $(IFLAGS) -c $<
+
+.PHONY:$(MODS)
+$(foreach mod, $(MODS), $(eval $(call MOD_RULE,$(mod))))
+
+$(DIRDEPS): ; mkdir -p $@
+
+.PHONY:$(LIBS)
+$(foreach lib, $(LIBS), $(eval $(call LIB_RULE,$(lib))))
 
 .PHONY: clean
 clean:
-	rm -f $(wildcard $(OBJ_FILES))
-	rm -rf $(DEP_DIR)
+	rm -f $(MYOBJS) $(MODSOBJS)
 
 .PHONY: fclean
 fclean: clean
 	rm -f $(NAME)
 
-.PHONY: re
-re: fclean $(NAME)
-
-a.c:
-	if [ ! -s a.c ] ; then ; touch a.c ; echo '#include "a.h"; #include "b.h"; #include "c.h"' >> a.c ; fi
-
-b.c:
-	if [ ! -s b.c ] ; then ; touch b.c ; echo '#include "b.h"; #include "c.h"' >> b.c ; fi
-
-c.c: 
-	if [ ! -s c.c ] ; then ; touch c.c ; echo '#include "c.h"' >> c.c ; fi
-
-#(*)
-DEP_FILES := $(SRCS_FILES:%.c=$(DEP_DIR)/%.d)
+DEP_FILES := $(MYSRCS:$(DIRSRCS)/%.c=$(DIRDEPS)/%.d)
 $(DEP_FILES):
 include $(wildcard $(DEP_FILES))

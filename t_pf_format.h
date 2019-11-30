@@ -15,7 +15,6 @@
 # define FMT_EXEC_ERROR	2
 # include <stdarg.h>
 # include "t_out_buffer.h"
-# include "general_bank.h"
 
 typedef unsigned char	t_flags;
 typedef struct			s_pf_format
@@ -25,7 +24,4 @@ typedef struct			s_pf_format
 	int					prec;
 	char				conv_char;
 }						t_pf_format;
-
-void					pf_format_normalize(t_pf_format *fmt)
-						= general_normalization;
 #endif
