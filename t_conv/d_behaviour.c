@@ -60,30 +60,47 @@ void unsigned_num_set_datas_content(t_conv *conv, t_txt_field_datas *fdatas)
 		fdatas->field_size = fdatas->content_size;
 }
 
-int unsigned_num_bufferize_field(t_conv *conv, t_out_buffer *buf, t_txt_field_datas *fdatas)
+int anysign_num_bufferize_field(t_conv *conv, t_out_buffer *buf, t_txt_field_datas fdatas, char must_sign)
 {
 	int ret;
 	char	*to_free;
+	char *ins;
 	
-	to_free = fdatas->content;
+	to_free = fdatas->content - must_sign;
+	if (must_sign)
+	{
+		if (conv->fmt->flags & FMT_MINUS)
+			ins = conv->field.my_field;
+		else
+			ins = conv->field.my_field + conv->field.size
+				- fdatas->content_size - 1;
+		*ins = *((char*)conv->com);
+	}
 	ret = s_bufferize_field(conv, buf, fdatas);
 	free(to_free);
 	return (ret);
 }
 
-int prec_unsigned_num_bufferize_field(t_conv *conv, t_out_buffer *buf, t_txt_field_datas *fdatas)
+int unsigned_num_bufferize_field(t_conv *conv, t_out_buffer *buf, t_txt_field_datas *fdatas)
+{
+	return (anysign_num_bufferize_field(conv, buf, fdatas, must_sign));
+}
+
+int prec_anysigned_num_bufferize_field(t_conv *conv, t_out_buffer *buf, t_txt_field_datas, char must_sign)
 {
 	char *ins;
 	int ret;
 	char *to_free;
 	int limit;
 
-	to_free = fdatas->content;
+	to_free = fdatas->content - must_sign;
 	if (t_txt_field_init(&conv->field, fdatas) != T_TXT_FIELD_INIT_OK)
 		return (CONV_EXEC_ERROR);
 	ins = (conv->fmt->flags & FMT_MINUS ? conv->field.my_field 
 		: conv->field.my_field + (conv->field.size - conv->fmt->prec));
 	limit = conv->fmt->prec - fdatas->content_size;
+	if (must_sign)
+		*ins++ = (*(char*)(conv->com));
 	while (limit-- > 0)
 		*ins++ = '0';
 	ret = t_out_buffer_ize(buf, conv->field.my_field, conv->field.my_field
@@ -93,4 +110,10 @@ int prec_unsigned_num_bufferize_field(t_conv *conv, t_out_buffer *buf, t_txt_fie
 	if (ret == T_OUT_BUFFERIZE_ERROR)
 		return (CONV_EXEC_ERROR);
 	return (CONV_EXEC_OK);
+}
+
+
+int prec_unsigned_num_bufferize_field(t_conv *conv, t_out_buffer *buf, t_txt_field_datas *fdatas)
+{
+	return (prec_anysigned_num_bufferize_field(conv, buf, fdatas, 0));
 }
