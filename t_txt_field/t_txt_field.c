@@ -20,6 +20,7 @@ int		t_txt_field_init(t_txt_field *field, t_txt_field_datas *datas)
 			field->my_field[cdx++] = datas->right_bg;
 		field->size = datas->field_size;
 		field->datas = datas;
+		return (T_TXT_FIELD_INIT_OK);
 	}
 	return (T_TXT_FIELD_INIT_ERROR);
 }

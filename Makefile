@@ -1,7 +1,8 @@
 NAME:=libft_printf.a#
 MODS:=t_out_buffer t_txt_field t_conv# Modules' directories, _each_ of these modules _must_ containt a Makefile
 DIRSRCS:=# Directory containing sources
-SRCS:=t_conv/conv.c t_conv/pf_conv_s.c t_conv/format_rules.c# Sources list, needed modules' .c files needed must be here, if, on a module
+SRCS:=t_conv/conv.c t_conv/format_rules.c t_conv/dummy_behaviour.c t_conv/s_behaviour.c t_conv/c_behaviour.c# Sources list, needed modules' .c files needed must be here, if, on a module
+IGNOREPATTERN:=%test.c#files matching this pattern will not be considered as source files
       # basis, no .c file is mentionned then all .c files module's will be automaticly added.
 LIBS:=libft #each lib here can have its own directory in the variable $(lib)DIR
 		#if unset, this variable wille have the default value $(lib)
@@ -35,10 +36,11 @@ IFLAGS:= $(DIRSRCS:%=-I%) $(DIRINCS:%=-I%) $(MODS:%=-I%) $(foreach lib, $(LIBS),
 
 # if MYSRCS is empty, it will be populated with all the .c files found in $DIRSRCS
 ifeq ($(MYSRCS),)
-MYSRCS:=$(wildcard $(DIRSRCS)/*.c)
+MYSRCS:=$(filter-out $(IGNOREPATTERN),$(wildcard $(DIRSRCS)/*.c))
 else
 MYSRCS:=$(MYSRCS:%.c=$(DIRSRCS)/%.c)
 endif
+$(info $(MYSRCS))
 
 # If, on a per module basis, MODSSRCS contains no .c file from the module, _all_ the
 # module's .c files are then added to the sources list.
@@ -59,8 +61,8 @@ endef
 .PHONY:all
 all: $(NAME)
 
-$(NAME): $(MYOBJS) $(MODS)
-	ar rc $@ $(MYOBJS) $(MODSOBJ)
+$(NAME): $(MYOBJS) $(MODS) $(LIBS)
+	ar rc $@ $(MYOBJS) $(MODSOBJS)
 	ranlib $@
 
 $(DIRSRCS)/%.o: $(DIRSRCS)/%.c $(DIRDEPS)/%.d | $(DIRDEPS)
@@ -77,7 +79,7 @@ $(foreach lib, $(LIBS), $(eval $(call LIB_RULE,$(lib))))
 .PHONY: clean
 clean:
 	rm -f $(MYOBJS) $(MODSOBJS)
-	$(foreach lib, $(LIBS),$(MAKE) -C $($(lib)DIR) clean ;)
+	$(foreach lib,$(LIBS),$(MAKE) -C $($(lib)DIR) clean ;)
 
 .PHONY: fclean
 fclean: clean

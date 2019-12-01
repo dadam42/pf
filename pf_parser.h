@@ -1,5 +1,5 @@
 #ifndef PF_PARSER_H
-# define PF_PARSE_H
+# define PF_PARSER_H
 # define PF_PARSE_ERROR -1
 # define PF_PARSE_OK 1
 # include "t_out_buffer.h"

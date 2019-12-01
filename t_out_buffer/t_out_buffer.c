@@ -8,12 +8,13 @@ static int		my_write(int fd, char const* start, int	len)
 
 	wret = 0;
 	owret = 0;
-	while ((wret += write(fd, start + wret, len - wret)))
-		if (wret < owret)
+	while ((wret += write(fd, start + wret, len - wret)) 
+		&& (wret < len))
+		if (wret <= owret)
 			return (T_OUT_BUFFERIZE_ERROR);
 		else
 			owret = wret;
-	return (1);
+	return (T_OUT_BUFFERIZE_OK);
 }
 
 void			t_out_buffer_init(t_out_buffer *buf, int fd)

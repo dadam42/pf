@@ -1,5 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pf_parser.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: damouyal <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/12/01 14:08:10 by damouyal          #+#    #+#             */
+/*   Updated: 2019/12/01 16:11:31 by damouyal         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "pf_parser.h"
 #include "t_out_buffer.h"
+#include "t_txt_field.h"
 #include "t_pf_format.h"
 #include "conv.h"
 #include "libft.h"
@@ -47,8 +60,8 @@ static int parse_flags(char const **str, t_pf_format *fmt)
 {
 	if (!**str)
 		return (PF_PARSE_ERROR);
-	while((**str == '-' || **str == '*')
-		&& !(fmt->flags & FMT_MINUS) && !(fmt->flags & FMT_ZERO))
+	while((**str == '-' || **str == '0')
+			&& !((fmt->flags & FMT_MINUS) && (fmt->flags & FMT_ZERO)))
 	{
 		if (**str == '-')
 			fmt->flags |= FMT_MINUS;
@@ -56,16 +69,37 @@ static int parse_flags(char const **str, t_pf_format *fmt)
 			fmt->flags |= FMT_ZERO;
 		(*str)++;
 	}
-	while (**str == '-' || **str == '+')
+	while (**str == '-' || **str == '0')
 		(*str)++;
 	return (PF_PARSE_OK);
 }
 
-static int parse_conv(char const **str, t_pf_format *fmt)
+static int pf_exec_conv(t_conv *conv, t_pf_format *fmt,
+		t_out_buffer *buf, va_list *pfargs)
 {
-	if (!(fmt->conv_char == **str))
-		return (PF_PARSE_ERROR);
-	return (PF_PARSE_OK);
+	t_txt_field_datas fdatas;
+	int		ret_init;
+
+	ft_bzero(&fdatas, sizeof(fdatas));
+	while (1)
+	{
+		if ((ret_init = conv_init(conv, fmt, pfargs)) == CONV_INIT_ERROR)
+			break;
+		if (ret_init == CONV_YES_DISPLAY)
+		{
+			if (conv->fmt->flags & FMT_ZERO)
+				fdatas.left_bg = '0';
+			else
+				fdatas.left_bg = ' ';
+			fdatas.right_bg = ' ';
+			conv->bhv.set_datas_content(conv, &fdatas);
+			set_field_size(conv, &fdatas);
+			if (conv->bhv.bufferize_field(conv, buf, &fdatas) != CONV_EXEC_OK)
+				break;
+		}
+		return (PF_PARSE_OK);
+	}
+	return (PF_PARSE_ERROR);
 }
 
 int pf_parse_exec(char const **str, t_out_buffer *buf, va_list *pfargs)
@@ -75,19 +109,17 @@ int pf_parse_exec(char const **str, t_out_buffer *buf, va_list *pfargs)
 	t_conv	conv;
 
 	ft_bzero(&fmt, sizeof(t_pf_format));
-	ostr = *str;
+	ostr = (*str)++;
 	while (1)
 	{
 		if (parse_flags(str, &fmt) == PF_PARSE_ERROR
-			|| parse_width(str, &fmt, pfargs) == PF_PARSE_ERROR
-			|| parse_width(str, &fmt, pfargs) == PF_PARSE_ERROR
-			|| parse_prec(str, &fmt, pfargs) == PF_PARSE_ERROR
-			|| parse_conv(str, &fmt) == PF_PARSE_ERROR)
+				|| parse_width(str, &fmt, pfargs) == PF_PARSE_ERROR
+				|| parse_width(str, &fmt, pfargs) == PF_PARSE_ERROR
+				|| parse_prec(str, &fmt, pfargs) == PF_PARSE_ERROR)
 			break;
-		if (conv_init(&conv, &fmt, pfargs) == CONV_INIT_ERROR
-			|| conv.exec(&conv, buf) == CONV_EXEC_ERROR)
-			return (PF_PARSE_ERROR);
-		return (PF_PARSE_OK);
+		if (!(fmt.conv_char = **str))
+			break;
+		return (pf_exec_conv(&conv, &fmt, buf, pfargs));
 	}
 	t_out_buffer_ize(buf, ostr, *str);
 	return (PF_PARSE_OK);
