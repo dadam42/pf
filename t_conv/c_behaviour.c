@@ -1,7 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   c_behaviour.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: damouyal <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/12/01 16:22:35 by damouyal          #+#    #+#             */
+/*   Updated: 2019/12/01 16:24:14 by damouyal         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "c_behaviour.h"
 #include "t_txt_field.h"
 #include "t_out_buffer.h"
 #include "t_pf_format.h"
+#include <stdarg.h>
 
 int c_init(t_conv *conv, va_list *pfargs)
 {

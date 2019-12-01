@@ -6,12 +6,13 @@
 /*   By: damouyal <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/30 22:55:28 by damouyal          #+#    #+#             */
-/*   Updated: 2019/12/01 15:52:34 by damouyal         ###   ########.fr       */
+/*   Updated: 2019/12/01 21:39:58 by damouyal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONV_BEHAVIOURS_CAT_H
 # define CONV_BEHAVIOURS_CAT_H
+# include "format_rules.h"
 # include "s_behaviour.h"
 # include "i_behaviour.h"
 # include "u_behaviour.h"
@@ -38,4 +39,13 @@ const t_conv_behaviour c_behaviour =
 	.set_datas_content = &c_set_datas_content,
 	.bufferize_field = &s_bufferize_field
 };
+const t_conv_behaviour d_behaviour = 
+{	
+	.format_rule = &format_numeric_rule,
+	.init = &d_init,
+	.set_datas_content = &unsigned_num_set_datas_content,
+	.bufferize_field = &unsigned_num_bufferize_field
+};
+
+
 #endif

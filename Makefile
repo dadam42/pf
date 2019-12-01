@@ -1,7 +1,7 @@
 NAME:=libft_printf.a#
 MODS:=t_out_buffer t_txt_field t_conv# Modules' directories, _each_ of these modules _must_ containt a Makefile
 DIRSRCS:=# Directory containing sources
-SRCS:=t_conv/conv.c t_conv/format_rules.c t_conv/dummy_behaviour.c t_conv/s_behaviour.c t_conv/c_behaviour.c# Sources list, needed modules' .c files needed must be here, if, on a module
+SRCS:=t_conv/conv.c t_conv/format_rules.c t_conv/dummy_behaviour.c t_conv/s_behaviour.c t_conv/c_behaviour.c t_conv/d_behaviour.c# Sources list, needed modules' .c files needed must be here, if, on a module
 IGNOREPATTERN:=%test.c#files matching this pattern will not be considered as source files
       # basis, no .c file is mentionned then all .c files module's will be automaticly added.
 LIBS:=libft #each lib here can have its own directory in the variable $(lib)DIR

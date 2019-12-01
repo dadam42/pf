@@ -6,7 +6,7 @@
 /*   By: damouyal <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/30 22:57:11 by damouyal          #+#    #+#             */
-/*   Updated: 2019/12/01 14:32:05 by damouyal         ###   ########.fr       */
+/*   Updated: 2019/12/01 21:27:01 by damouyal         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,12 +53,10 @@ int conv_init(t_conv *conv, t_pf_format *fmt, va_list *pfargs)
 void set_field_size(t_conv *conv, t_txt_field_datas *fdatas)
 {
 	if ((conv->fmt->flags & FMT_WIDTH) 
-		&& conv->fmt->width > fdatas->content_size)
+		&& conv->fmt->width > fdatas->field_size)
 	{
 		if (!(conv->fmt->flags & FMT_MINUS))
-			fdatas->left_pad = conv->fmt->width - fdatas->content_size;
-		fdatas->field_size = conv->fmt->width;
+			fdatas->left_pad += conv->fmt->width - fdatas->field_size;
+		fdatas->field_size += conv->fmt->width;
 	}
-	else
-		fdatas->field_size = fdatas->content_size;
 }
